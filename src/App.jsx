@@ -37,7 +37,6 @@ export default function App() {
 
   return (
     <div className="app-root">
-      <h2>Go — 9×9 (click intersections)</h2>
       <div
         className="board"
         style={{ width: boardPixelSize, height: boardPixelSize }}
