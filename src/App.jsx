@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import "./App.css";
+import { getGroup, countLiberties } from "./gameLogic";
+
 
 export default function App() {
   const size = 9; // number of intersections per side
@@ -21,15 +23,52 @@ export default function App() {
   const [currentPlayer, setCurrentPlayer] = useState("black");
 
   function handleClick(r, c) {
-    // guard: can't place on already occupied intersection
-    if (board[r][c] !== null) return;
-
-    // deep copy and place stone
+    if (board[r][c] !== null) return; // occupied
+  
     const newBoard = board.map((row) => row.slice());
     newBoard[r][c] = currentPlayer;
+  
+    const opponent = currentPlayer === "black" ? "white" : "black";
+    const dirs = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ];
+  
+    // Check neighboring opponent groups for capture
+    for (const [dx, dy] of dirs) {
+      const nx = r + dx;
+      const ny = c + dy;
+      if (
+        nx >= 0 &&
+        nx < size &&
+        ny >= 0 &&
+        ny < size &&
+        newBoard[nx][ny] === opponent
+      ) {
+        const enemyGroup = getGroup(newBoard, nx, ny);
+        if (countLiberties(newBoard, enemyGroup) === 0) {
+          // capture enemy stones
+          for (const [ex, ey] of enemyGroup) {
+            newBoard[ex][ey] = null;
+          }
+        }
+      }
+    }
+  
+    // Check if our own move is suicide
+    const myGroup = getGroup(newBoard, r, c);
+    if (countLiberties(newBoard, myGroup) === 0) {
+      // Illegal move (suicide)
+      return;
+    }
+  
+    // Apply move
     setBoard(newBoard);
-    setCurrentPlayer(currentPlayer === "black" ? "white" : "black");
+    setCurrentPlayer(opponent);
   }
+  
 
   // container dimensions (px)
   const boardInnerSize = spacing * (size - 1); // distance between first and last line
